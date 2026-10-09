@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Alunos</title>
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: white;
+        }
+
+        .container {
+            width: 400px;
+            max-width: calc(100% - 70px);
+            padding: 35px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #222;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        #mensagem {
+            text-align: center;
+            margin-top: 20px;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Cadastro de Alunos</h2>
+
+        <form id="form" novalidate>
+            <input name="nome" placeholder="Nome completo">
+            <input name="email" type="email" placeholder="E-mail">
+            <input name="telefone" placeholder="Telefone">
+            <input name="data_nascimento" type="date">
+
+            <button type="submit">Cadastrar aluno</button>
+        </form>
+
+        <p id="mensagem"></p>
+    </div>
+
+    <script>
+        const form = document.getElementById('form');
+        const mensagem = document.getElementById('mensagem');
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            mensagem.textContent = '';
+
+            const dados = Object.fromEntries(
+                new FormData(form).entries()
+            );
+
+            try {
+                const resposta = await fetch(
+                    'http://localhost/autoescola/back/index.php/alunos/create',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(dados)
+                    }
+                );
+
+                const texto = await resposta.text();
+
+                let retorno;
+
+                try {
+                    retorno = JSON.parse(texto);
+                } catch {
+                    console.error('Resposta do servidor:', texto);
+                    alert(
+                        'Resposta inválida do servidor. ' +
+                        'Verifique o Console do navegador (F12).'
+                    );
+                    mensagem.textContent = 'falha';
+                    return;
+                }
+
+                if (!resposta.ok) {
+                    alert(
+                        'Erro HTTP: ' + resposta.status +
+                        '\n' + JSON.stringify(retorno)
+                    );
+
+                    mensagem.textContent = 'falha';
+                    return;
+                }
+
+                mensagem.textContent = 'Cadastrado com sucesso';
+                form.reset();
+
+            } catch (erro) {
+                console.error(erro);
+                mensagem.textContent = 'falha';
+                alert('Erro de conexão com o servidor.');
+            }
+        });
+    </script>
+</body>
+</html>
